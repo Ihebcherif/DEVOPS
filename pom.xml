@@ -51,9 +51,11 @@
             <version>8.0.26</version>
         </dependency>
         <dependency>
-        <groupId>org.mockito</groupId>
-    <artifactId>mockito-core</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>4.5.1</version>
         </dependency>
+
 
     </dependencies>
 
@@ -108,7 +110,7 @@
     <!-- Deploy to Nexus
     <distributionManagement>
         <id>deploymentRepo</id>
-        <url>http://<@ip>:8081/repository/maven-releases/</url>
+        <url>http://192.168.56.2:8081/repository/maven-releases/</url>
     </distributionManagement>-->
 
 </project>
