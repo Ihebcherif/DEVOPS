@@ -30,7 +30,7 @@ public class BlocService implements IBlocService {
         return b;
     }
 
-    
+
     @Override
     public Bloc addOrUpdate(Bloc b) {
         List<Chambre> chambres= b.getChambres();
