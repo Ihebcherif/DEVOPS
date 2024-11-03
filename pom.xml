@@ -6,11 +6,11 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.1.5</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
     <groupId>tn.esprit.spring</groupId>
     <artifactId>Foyer</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
     <name>Foyer</name>
     <description>Foyer</description>
     <properties>
@@ -19,7 +19,14 @@
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.release>17</maven.compiler.release>
 
+        <!-- Chemin du rapport JaCoCo pour SonarQube -->
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.projectName>Foyer</sonar.projectName>
+        <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
+        <sonar.language>java</sonar.language>
+
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -50,17 +57,10 @@
             <version>2.0.0</version>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.26</version>
-        </dependency>
-        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>4.5.1</version>
         </dependency>
-
-
     </dependencies>
 
     <build>
@@ -103,28 +103,32 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>report-xml</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+                            <formats>
+                                <format>XML</format>
+                            </formats>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
-
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.9.1.2184</version>
+            </plugin>
         </plugins>
     </build>
 
-    <!-- Deploy to Nexus -->
     <distributionManagement>
         <repository>
             <id>deploymentRepo</id>
-            <url>http://192.168.56.2:8081/repository/maven-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>deploymentRepo-snapshots</id>
             <url>http://192.168.56.2:8081/repository/maven-snapshots/</url>
-        </snapshotRepository>
+        </repository>
     </distributionManagement>
-
-    <!-- Deploy to Nexus
-       <distributionManagement>
-           <id>deploymentRepo</id>
-           <url>http://192.168.56.2:8081/repository/maven-releases/</url>
-       </distributionManagement>-->
-
 </project>
