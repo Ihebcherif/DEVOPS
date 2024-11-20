@@ -18,7 +18,7 @@ services:
 
 
   springboot-app:
-    image: saifdinne/mywebapp:${BUILD_NUMBER}
+    image: saifdinne/devops:${BUILD_NUMBER}
     container_name: springboot-app
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/devops?createDatabaseIfNotExist=true
