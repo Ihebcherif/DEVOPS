@@ -1,23 +1,41 @@
-version: '3'
+
+version: '3.8'
+
 services:
-  mysql-db:
+  mysql:
     image: mysql:latest
-    container_name: docker-compose-mysql-db
-    ports:
-      - "3307:3306"
+    container_name: mysql-db
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=foyer
-
-
-  spring-boot-app:
-    image: saifdinne/foyer
-    container_name: docker-compose-spring-boot
+      - MYSQL_DATABASE=devops
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     ports:
-      - "8088:8081"
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - springboot-mysql-network
+
+
+
+  springboot-app:
+    image: saifdinne/mywebapp:latest
+    container_name: springboot-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/devops?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+
+    ports:
+      - "8082:8082"
     depends_on:
-      - mysql-db
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://docker-compose-mysql-db:3306/foyer?&createDatabaseIfNotExist=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - mysql
+    networks:
+      - springboot-mysql-network
+
+volumes:
+  mysql_data:
+
+networks:
+  springboot-mysql-network:
+    driver: bridge
+
