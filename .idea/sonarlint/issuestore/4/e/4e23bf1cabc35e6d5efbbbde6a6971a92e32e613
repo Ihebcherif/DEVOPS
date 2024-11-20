@@ -1,0 +1,18 @@
+
+h
+java:S1192™"LDefine a constant instead of duplicating this literal "La chambre " 3 times.(³ˆÚ‚ÿÿÿÿÿ
+†
+java:S1192—"oDefine a constant instead of duplicating this literal "Le nombre de place disponible pour la chambre " 3 times.(åÄï
+j
+java:S1192™"NDefine a constant instead of duplicating this literal " est complete" 3 times.(³ˆÚ‚ÿÿÿÿÿ
+o	java:S120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(Ğ™„¼
+m
+java:S3776<"RRefactor this method to reduce its Cognitive Complexity from 22 to the 15 allowed.(‹¨öÈùÿÿÿÿ
+g
+java:S1871\"LThis branch's code block is the same as the block for the branch on line 90.(­®®«şÿÿÿÿ
+b
+java:S1871^"LThis branch's code block is the same as the block for the branch on line 90.( º‘Ù
+i
+java:S3776„"RRefactor this method to reduce its Cognitive Complexity from 17 to the 15 allowed.(òéúÜ
+O
+java:S1481ˆ"3Remove this unused "numReservation" local variable.(ÒàğÕøÿÿÿÿ
