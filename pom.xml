@@ -54,6 +54,16 @@
             <artifactId>mockito-core</artifactId>
             <version>4.5.1</version>
         </dependency>
+         <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+             <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.30</version>
+        </dependency>
+
     </dependencies>
 
     <build>
