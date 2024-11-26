@@ -6,11 +6,12 @@ import tn.esprit.spring.dao.entities.Etudiant;
 import tn.esprit.spring.dao.repositories.EtudiantRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 public class EtudiantService implements IEtudiantService {
-    EtudiantRepository repo;
+    private final EtudiantRepository repo;
 
     @Override
     public Etudiant addOrUpdate(Etudiant e) {
@@ -24,12 +25,18 @@ public class EtudiantService implements IEtudiantService {
 
     @Override
     public Etudiant findById(long id) {
-        return repo.findById(id).get();
+
+        return repo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Etudiant with id " + id + " not found"));
     }
 
     @Override
     public void deleteById(long id) {
-        repo.deleteById(id);
+        if (repo.existsById(id)) {
+            repo.deleteById(id);
+        } else {
+            throw new IllegalArgumentException("Etudiant with id " + id + " does not exist");
+        }
     }
 
     @Override

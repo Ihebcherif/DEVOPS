@@ -18,8 +18,13 @@ import java.util.List;
 @AllArgsConstructor
 @Slf4j
 public class ChambreService implements IChambreService {
-    ChambreRepository repo;
-    BlocRepository blocRepository;
+
+    private static final String AVAILABLE_MESSAGE = "Le nombre de place disponible pour la chambre ";
+    private static final String COMPLETE_MESSAGE = "La chambre ";
+    private static final String IS_COMPLETE = " est complete";
+
+    private final ChambreRepository repo;
+    private final BlocRepository blocRepository;
 
     @Override
     public Chambre addOrUpdate(Chambre c) {
@@ -33,7 +38,8 @@ public class ChambreService implements IChambreService {
 
     @Override
     public Chambre findById(long id) {
-        return repo.findById(id).get();
+        return repo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Chambre not found with id: " + id));
     }
 
     @Override
@@ -58,40 +64,21 @@ public class ChambreService implements IChambreService {
 
     @Override
     public List<Chambre> getChambresNonReserveParNomFoyerEtTypeChambre(String nomFoyer, TypeChambre type) {
+        LocalDate[] academicYearRange = getAcademicYearRange();
+        LocalDate startOfAcademicYear = academicYearRange[0];
+        LocalDate endOfAcademicYear = academicYearRange[1];
 
-        // Afficher les chambres non réservée, par typeChambre,
-        // appartenant à un foyer donné par son nom, effectué durant
-        // l’année universitaire actuelle.
-
-        // Début "récuperer l'année universitaire actuelle"
-        LocalDate dateDebutAU;
-        LocalDate dateFinAU;
-        int numReservation;
-        int year = LocalDate.now().getYear() % 100;
-        if (LocalDate.now().getMonthValue() <= 7) {
-            dateDebutAU = LocalDate.of(Integer.parseInt("20" + (year - 1)), 9, 15);
-            dateFinAU = LocalDate.of(Integer.parseInt("20" + year), 6, 30);
-        } else {
-            dateDebutAU = LocalDate.of(Integer.parseInt("20" + year), 9, 15);
-            dateFinAU = LocalDate.of(Integer.parseInt("20" + (year + 1)), 6, 30);
-        }
-        // Fin "récuperer l'année universitaire actuelle"
         List<Chambre> listChambreDispo = new ArrayList<>();
         for (Chambre c : repo.findAll()) {
-            if (c.getTypeC().equals(type) && c.getBloc().getFoyer().getNomFoyer().equals(nomFoyer)) { // Les chambres du foyer X et qui ont le type Y
-                numReservation = 0;
-                // nchoufou les réservations mta3 AU hethy binesba lil bit heki
-                for (Reservation reservation : c.getReservations()) {
-                    if (reservation.getAnneeUniversitaire().isBefore(dateFinAU) && reservation.getAnneeUniversitaire().isAfter(dateDebutAU)) {
-                        numReservation++;
-                    }
-                }
-                // nvérifi bil type w nombre des places elli l9ahom fer8in fi kol bit
-                if (c.getTypeC().equals(TypeChambre.SIMPLE) && numReservation == 0) {
-                    listChambreDispo.add(c);
-                } else if (c.getTypeC().equals(TypeChambre.DOUBLE) && numReservation < 2) {
-                    listChambreDispo.add(c);
-                } else if (c.getTypeC().equals(TypeChambre.TRIPLE) && numReservation < 3) {
+            if (c.getTypeC().equals(type) && c.getBloc().getFoyer().getNomFoyer().equals(nomFoyer)) {
+                long numReservations = c.getReservations().stream()
+                        .filter(reservation -> reservation.getAnneeUniversitaire().isAfter(startOfAcademicYear) &&
+                                reservation.getAnneeUniversitaire().isBefore(endOfAcademicYear))
+                        .count();
+
+                if ((type.equals(TypeChambre.SIMPLE) && numReservations == 0) ||
+                        (type.equals(TypeChambre.DOUBLE) && numReservations < 2) ||
+                        (type.equals(TypeChambre.TRIPLE) && numReservations < 3)) {
                     listChambreDispo.add(c);
                 }
             }
@@ -102,14 +89,12 @@ public class ChambreService implements IChambreService {
     @Override
     public void listeChambresParBloc() {
         for (Bloc b : blocRepository.findAll()) {
-            log.info("Bloc => " + b.getNomBloc() + " ayant une capacité " + b.getCapaciteBloc());
-            if (b.getChambres().size() != 0) {
-                log.info("La liste des chambres pour ce bloc: ");
-                for (Chambre c : b.getChambres()) {
-                    log.info("NumChambre: " + c.getNumeroChambre() + " type: " + c.getTypeC());
-                }
-            } else {
+            log.info("Bloc => {} ayant une capacité {}", b.getNomBloc(), b.getCapaciteBloc());
+            if (b.getChambres().isEmpty()) {
                 log.info("Pas de chambre disponible dans ce bloc");
+            } else {
+                log.info("La liste des chambres pour ce bloc: ");
+                b.getChambres().forEach(c -> log.info("NumChambre: {} type: {}", c.getNumeroChambre(), c.getTypeC()));
             }
             log.info("********************");
         }
@@ -118,55 +103,57 @@ public class ChambreService implements IChambreService {
     @Override
     public void pourcentageChambreParTypeChambre() {
         long totalChambre = repo.count();
-        double pSimple = (repo.countChambreByTypeC(TypeChambre.SIMPLE) * 100) / totalChambre;
-        double pDouble = (repo.countChambreByTypeC(TypeChambre.DOUBLE) * 100) / totalChambre;
-        double pTriple = (repo.countChambreByTypeC(TypeChambre.TRIPLE) * 100) / totalChambre;
-        log.info("Nombre total des chambre: " + totalChambre);
-        log.info("Le pourcentage des chambres pour le type SIMPLE est égale à " + pSimple);
-        log.info("Le pourcentage des chambres pour le type DOUBLE est égale à " + pDouble);
-        log.info("Le pourcentage des chambres pour le type TRIPLE est égale à " + pTriple);
+        if (totalChambre == 0) {
+            log.info("Aucune chambre enregistrée.");
+            return;
+        }
 
+        double pSimple = ((double) repo.countChambreByTypeC(TypeChambre.SIMPLE) * 100) / totalChambre;
+        double pDouble = ((double) repo.countChambreByTypeC(TypeChambre.DOUBLE) * 100) / totalChambre;
+        double pTriple = ((double) repo.countChambreByTypeC(TypeChambre.TRIPLE) * 100) / totalChambre;
+
+        log.info("Nombre total des chambres: {}", totalChambre);
+        log.info("Le pourcentage des chambres pour le type SIMPLE est égal à {}", pSimple);
+        log.info("Le pourcentage des chambres pour le type DOUBLE est égal à {}", pDouble);
+        log.info("Le pourcentage des chambres pour le type TRIPLE est égal à {}", pTriple);
     }
 
     @Override
     public void nbPlacesDisponibleParChambreAnneeEnCours() {
-        // Début "récuperer l'année universitaire actuelle"
-        LocalDate dateDebutAU;
-        LocalDate dateFinAU;
-        int numReservation;
-        int year = LocalDate.now().getYear() % 100;
-        if (LocalDate.now().getMonthValue() <= 7) {
-            dateDebutAU = LocalDate.of(Integer.parseInt("20" + (year - 1)), 9, 15);
-            dateFinAU = LocalDate.of(Integer.parseInt("20" + year), 6, 30);
-        } else {
-            dateDebutAU = LocalDate.of(Integer.parseInt("20" + year), 9, 15);
-            dateFinAU = LocalDate.of(Integer.parseInt("20" + (year + 1)), 6, 30);
-        }
-        // Fin "récuperer l'année universitaire actuelle"
+        LocalDate[] academicYearRange = getAcademicYearRange();
+        LocalDate startOfAcademicYear = academicYearRange[0];
+        LocalDate endOfAcademicYear = academicYearRange[1];
+
         for (Chambre c : repo.findAll()) {
-            long nbReservation = repo.countReservationsByIdChambreAndReservationsEstValideAndReservationsAnneeUniversitaireBetween(c.getIdChambre(),true, dateDebutAU, dateFinAU);
-            switch (c.getTypeC()) {
-                case SIMPLE:
-                    if (nbReservation == 0) {
-                        log.info("Le nombre de place disponible pour la chambre " + c.getTypeC() + " " + c.getNumeroChambre() + " est 1 ");
-                    } else {
-                        log.info("La chambre " + c.getTypeC() + " " + c.getNumeroChambre() + " est complete");
-                    }
-                    break;
-                case DOUBLE:
-                    if (nbReservation < 2) {
-                        log.info("Le nombre de place disponible pour la chambre " + c.getTypeC() + " " + c.getNumeroChambre() + " est " + (2 - nbReservation));
-                    } else {
-                        log.info("La chambre " + c.getTypeC() + " " + c.getNumeroChambre() + " est complete");
-                    }
-                    break;
-                case TRIPLE:
-                    if (nbReservation < 3) {
-                        log.info("Le nombre de place disponible pour la chambre " + c.getTypeC() + " " + c.getNumeroChambre() + " est " + (3 - nbReservation));
-                    } else {
-                        log.info("La chambre " + c.getTypeC() + " " + c.getNumeroChambre() + " est complete");
-                    }
+            long nbReservations = repo.countReservationsByIdChambreAndReservationsEstValideAndReservationsAnneeUniversitaireBetween(
+                    c.getIdChambre(), true, startOfAcademicYear, endOfAcademicYear);
+
+            String message;
+            if (c.getTypeC().equals(TypeChambre.SIMPLE) && nbReservations == 0) {
+                message = AVAILABLE_MESSAGE + c.getTypeC() + " " + c.getNumeroChambre() + " est 1";
+            } else if (c.getTypeC().equals(TypeChambre.DOUBLE) && nbReservations < 2) {
+                message = AVAILABLE_MESSAGE + c.getTypeC() + " " + c.getNumeroChambre() + " est " + (2 - nbReservations);
+            } else if (c.getTypeC().equals(TypeChambre.TRIPLE) && nbReservations < 3) {
+                message = AVAILABLE_MESSAGE + c.getTypeC() + " " + c.getNumeroChambre() + " est " + (3 - nbReservations);
+            } else {
+                message = COMPLETE_MESSAGE + c.getTypeC() + " " + c.getNumeroChambre() + IS_COMPLETE;
             }
+            log.info(message);
         }
+    }
+
+    private LocalDate[] getAcademicYearRange() {
+        int year = LocalDate.now().getYear() % 100;
+        LocalDate startOfAcademicYear;
+        LocalDate endOfAcademicYear;
+
+        if (LocalDate.now().getMonthValue() <= 7) {
+            startOfAcademicYear = LocalDate.of(Integer.parseInt("20" + (year - 1)), 9, 15);
+            endOfAcademicYear = LocalDate.of(Integer.parseInt("20" + year), 6, 30);
+        } else {
+            startOfAcademicYear = LocalDate.of(Integer.parseInt("20" + year), 9, 15);
+            endOfAcademicYear = LocalDate.of(Integer.parseInt("20" + (year + 1)), 6, 30);
+        }
+        return new LocalDate[]{startOfAcademicYear, endOfAcademicYear};
     }
 }

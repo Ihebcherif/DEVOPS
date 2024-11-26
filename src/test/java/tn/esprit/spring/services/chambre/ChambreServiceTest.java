@@ -21,7 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ChambreServiceTest {
+ class ChambreServiceTest {
 
     @Mock
     ChambreRepository chambreRepository;
@@ -36,7 +36,7 @@ public class ChambreServiceTest {
 
 
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         chambre = new Chambre();
         chambre.setIdChambre(1L);
         chambre.setTypeC(TypeChambre.SIMPLE);
@@ -44,7 +44,7 @@ public class ChambreServiceTest {
 
 
     @Test
-    public void testAddOrUpdate() {
+     void testAddOrUpdate() {
         when(chambreRepository.save(any(Chambre.class))).thenReturn(chambre);
         Chambre result = chambreService.addOrUpdate(chambre);
         assertNotNull(result);
@@ -54,7 +54,7 @@ public class ChambreServiceTest {
 
 
     @Test
-    public void testFindById() {
+     void testFindById() {
         when(chambreRepository.findById(1L)).thenReturn(Optional.of(chambre));
         Chambre result = chambreService.findById(1L);
         assertNotNull(result);
@@ -64,7 +64,7 @@ public class ChambreServiceTest {
 
 
     @Test
-    public void testDeleteById() {
+     void testDeleteById() {
         doNothing().when(chambreRepository).deleteById(1L);
         chambreService.deleteById(1L);
         verify(chambreRepository, times(1)).deleteById(1L);
@@ -72,7 +72,7 @@ public class ChambreServiceTest {
 
 
     @Test
-    public void testGetChambresParNomBloc() {
+     void testGetChambresParNomBloc() {
         List<Chambre> chambres = Arrays.asList(chambre);
         when(chambreRepository.findByBlocNomBloc("BlocA")).thenReturn(chambres);
         List<Chambre> result = chambreService.getChambresParNomBloc("BlocA");

@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ChambreRestController.class)
-public class ChambreRestControllerTest {
+ class ChambreRestControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -33,14 +33,14 @@ public class ChambreRestControllerTest {
 
 
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         chambre = new Chambre();
         chambre.setIdChambre(1L);
         chambre.setTypeC(TypeChambre.SIMPLE);
     }
 
     @Test
-    public void testAddOrUpdate() throws Exception {
+     void testAddOrUpdate() throws Exception {
         when(chambreService.addOrUpdate(Mockito.any(Chambre.class))).thenReturn(chambre);
         mockMvc.perform(post("/chambre/addOrUpdate")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -51,7 +51,7 @@ public class ChambreRestControllerTest {
 
 
     @Test
-    public void testFindById() throws Exception {
+     void testFindById() throws Exception {
         when(chambreService.findById(anyLong())).thenReturn(chambre);
         mockMvc.perform(get("/chambre/findById?id=1"))
                 .andExpect(status().isOk())
@@ -60,7 +60,7 @@ public class ChambreRestControllerTest {
 
 
     @Test
-    public void testGetChambresParNomBloc() throws Exception {
+     void testGetChambresParNomBloc() throws Exception {
         when(chambreService.getChambresParNomBloc("BlocA")).thenReturn(Collections.singletonList(chambre));
         mockMvc.perform(get("/chambre/getChambresParNomBloc?nomBloc=BlocA"))
                 .andExpect(status().isOk())

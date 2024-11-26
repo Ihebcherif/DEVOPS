@@ -11,33 +11,35 @@ import tn.esprit.spring.dao.repositories.FoyerRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 public class BlocService implements IBlocService {
-    BlocRepository repo;
-    ChambreRepository chambreRepository;
-    BlocRepository blocRepository;
-    FoyerRepository foyerRepository;
+
+    private final BlocRepository repo;
+    private final ChambreRepository chambreRepository;
+    private final FoyerRepository foyerRepository;
 
     @Override
-    public Bloc addOrUpdate2(Bloc b) { //Cascade
-        List<Chambre> chambres= b.getChambres();
-        for (Chambre c: chambres) {
-            c.setBloc(b);
-            chambreRepository.save(c);
+    public Bloc addOrUpdate2(Bloc b) { // Cascade
+        if (b.getChambres() != null) {
+            for (Chambre c : b.getChambres()) {
+                c.setBloc(b);
+                chambreRepository.save(c);
+            }
         }
-        return b;
+        return repo.save(b);
     }
-
 
     @Override
     public Bloc addOrUpdate(Bloc b) {
-        List<Chambre> chambres= b.getChambres();
-        b= repo.save(b);
-        for (Chambre chambre: chambres) {
-            chambre.setBloc(b);
-            chambreRepository.save(chambre);
+        if (b.getChambres() != null) {
+            b = repo.save(b);
+            for (Chambre chambre : b.getChambres()) {
+                chambre.setBloc(b);
+                chambreRepository.save(chambre);
+            }
         }
         return b;
     }
@@ -49,50 +51,68 @@ public class BlocService implements IBlocService {
 
     @Override
     public Bloc findById(long id) {
-        return repo.findById(id).get();
+        // Check if the optional contains a value before accessing it
+        Optional<Bloc> optionalBloc = repo.findById(id);
+        if (optionalBloc.isPresent()) {
+            return optionalBloc.get();
+        } else {
+            throw new RuntimeException("Bloc with ID " + id + " not found."); // Improve error handling
+        }
     }
 
     @Override
     public void deleteById(long id) {
-        repo.deleteById(id);
+        if (repo.existsById(id)) {
+            repo.deleteById(id);
+        } else {
+            throw new RuntimeException("Bloc with ID " + id + " does not exist.");
+        }
     }
 
     @Override
     public void delete(Bloc b) {
-        List<Chambre> chambres= b.getChambres();
-        for (Chambre chambre: chambres) {
-            chambreRepository.delete(chambre);
+        if (b.getChambres() != null) {
+            for (Chambre chambre : b.getChambres()) {
+                chambreRepository.delete(chambre);
+            }
         }
         repo.delete(b);
     }
 
     @Override
     public Bloc affecterChambresABloc(List<Long> numChambre, String nomBloc) {
-        //1
         Bloc b = repo.findByNomBloc(nomBloc);
-        List<Chambre> chambres= new ArrayList<>();
-        for (Long nu: numChambre) {
-            Chambre chambre=chambreRepository.findByNumeroChambre(nu);
-            chambres.add(chambre);
+        if (b == null) {
+            throw new RuntimeException("Bloc with name " + nomBloc + " not found.");
         }
-        // Keyword (2ème méthode)
-        //chambres=chambreRepository.findAllByNumeroChambre(numChambre);
-        //2 Parent==>Chambre  Child==> Bloc
-        for (Chambre cha : chambres) {
-            //3 On affecte le child au parent
-                cha.setBloc(b);
-            //4 save du parent
-                chambreRepository.save(cha);
+
+        List<Chambre> chambres = new ArrayList<>();
+        for (Long nu : numChambre) {
+            Chambre chambre = chambreRepository.findByNumeroChambre(nu);
+            if (chambre != null) {
+                chambre.setBloc(b);
+                chambres.add(chambre);
+                chambreRepository.save(chambre);
+            } else {
+                throw new RuntimeException("Chambre with number " + nu + " not found.");
+            }
         }
         return b;
     }
 
     @Override
     public Bloc affecterBlocAFoyer(String nomBloc, String nomFoyer) {
-        Bloc b = blocRepository.findByNomBloc(nomBloc); //Parent
-        Foyer f = foyerRepository.findByNomFoyer(nomFoyer); //Child
-        //On affecte le child au parent
+        Bloc b = repo.findByNomBloc(nomBloc);
+        if (b == null) {
+            throw new RuntimeException("Bloc with name " + nomBloc + " not found.");
+        }
+
+        Foyer f = foyerRepository.findByNomFoyer(nomFoyer);
+        if (f == null) {
+            throw new RuntimeException("Foyer with name " + nomFoyer + " not found.");
+        }
+
         b.setFoyer(f);
-        return blocRepository.save(b);
+        return repo.save(b);
     }
 }
